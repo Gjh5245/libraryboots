@@ -52,6 +52,6 @@ public class BookController {
     }
     @GetMapping("/user")
     public result deleteBy(){
-          return null;
+          return new result();
     }
 }
