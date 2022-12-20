@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .el-table .warning-row {
+            background: oldlace;
+        }
+
+        .el-table .success-row {
+            background: #f0f9eb;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-form :inline="true" :model="books" class="demo-form-inline">
+        <el-form-item label="书籍名称">
+            <el-input v-model="books.bookname" placeholder="书籍名称"></el-input>
+        </el-form-item>
+        <el-form-item label="书籍价格">
+            <el-input v-model="books.bookmoney" placeholder="书籍价格"></el-input>
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" @click="onSubmit">查询</el-button>
+        </el-form-item>
+    </el-form>
+    <el-row>
+        <el-button type="primary">批量删除</el-button>
+        <el-button type="danger" @click="dialogVisible = true">新增</el-button>
+    </el-row>
+    <el-dialog
+            title="提示"
+            :visible.sync="dialogVisible"
+            width="30%"
+    >
+        <el-form ref="form" :model="form" label-width="80px">
+            <el-form-item label="书籍名称">
+                <el-input v-model="form.bookname"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍价格">
+                <el-input v-model="form.bookmoney"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍作者">
+                <el-input v-model="form.bookusername"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="addbooks">新增</el-button>
+                <el-button @click="cancel">取消</el-button>
+            </el-form-item>
+        </el-form>
+    </el-dialog>
+    <!-- 表格-->
+    <!--    <template >-->
+
+    <el-table
+            :data="tableData"
+            style="width: 100%"
+            :row-class-name="tableRowClassName"
+            @selection-change="handleSelectionChange">
+        <el-table-column
+                type="selection"
+                width="55">
+        </el-table-column>
+        <el-table-column
+                type="index"
+                width="50">
+        </el-table-column>
+        <el-table-column
+                prop="bookname"
+                label="书籍名称"
+                align="center"
+        >
+        </el-table-column>
+        <el-table-column
+                prop="bookmoney"
+                label="书籍价格"
+                align="center"
+        >
+        </el-table-column>
+        <el-table-column
+                prop="bookusername"
+                align="center"
+                label="作者">
+        </el-table-column>
+        <el-table-column align="center" label="操作">
+            <template slot-scope="scope">
+                <el-button type="primary" size="mini" @click="handleupdate(scope.row)">编辑</el-button>
+                <el-button type="danger" size="mini" @click="handledelete(scope.row)">删除</el-button>
+            </template>
+            <!--                <el-row >-->
+            <!--                    <el-button type="primary" @click="handleupdate(scope.row)" >修改</el-button>-->
+            <!--                    <el-button type="danger" @click="handledelete(scope.row)" >删除</el-button>-->
+            <!--                </el-row>-->
+        </el-table-column>
+    </el-table>
+    <el-dialog title="提示" :visible.sync="updatedialogVisible" width="30%" :before-close="handleClose">
+        <el-form ref="forms" :model="forms" label-width="80px">
+            <el-form-item label="书籍名称">
+                <el-input v-model="forms.bookname"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍价格">
+                <el-input v-model="forms.bookmoney"></el-input>
+            </el-form-item>
+            <el-form-item label="书籍作者">
+                <el-input v-model="forms.bookusername"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-button type="primary" @click="updatebooks">修改</el-button>
+                <el-button @click="dialogVisible = false">取消</el-button>
+            </el-form-item>
+        </el-form>
+        <!--    <el-button @click="dialogVisible = false">取 消</el-button>-->
+        <!--    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>-->
+        </span>
+    </el-dialog>
+    <!--    </template>-->
+    <!--分页工具条 -->
+    <el-pagination
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+            :current-page="currentPage"
+            :page-sizes="[100, 200, 300, 400]"
+            :page-size="100"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="400">
+    </el-pagination>
+
+</div>
+<script src="https://unpkg.com/axios/dist/axios.min.js"> </script>
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    new Vue({
+        el:"#app",
+        mounted(){
+            this.selectall();
+        },
+        methods: {
+            //查询所有
+            selectall() {
+                var _this = this;
+                axios({
+                    method: "get",
+                    url: "http://localhost:8081/books",
+                }).then(function (res) {
+                    _this.tableData = res.data.data;
+                })
+            },
+            //分页方法
+            handleSizeChange(val) {
+                console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                console.log(`当前页: ${val}`);
+            },
+            tableRowClassName({row, rowIndex}) {
+                if (rowIndex === 1) {
+                    return 'warning-row';
+                } else if (rowIndex === 3) {
+                    return 'success-row';
+                }
+                return '';
+            },
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            onSubmit() {
+                console.log(this.books);
+            },
+            //添加数据
+            addbooks() {
+                var _this = this;
+                axios({
+                    method: "post",
+                    url: "http://localhost:8081/books",
+                    data: _this.form,
+                }).then(function (res) {
+                    if (res.data.code == 20011) {
+                        _this.dialogVisible = false;
+                        _this.selectall();
+                        _this.$message({
+                            message: '恭喜你，添加成功',
+                            type: 'success'
+                        });
+                    }
+                })
+            },
+            cancel() {
+                this.dialogVisible = false;
+                this.updatedialogVisible = false;
+            },
+            handleupdate(row) {
+                axios.get("/books/" + row.bookname).then((res) => {
+                    if (res.data.code == 20031) {
+                        this.forms = res.data.data;
+                        this.updatedialogVisible = true;
+                    }
+                })
+            },
+            updatebooks() {
+                axios.put("/books", this.forms).then((res) => {
+                        if (res.data.code == 20041) {
+                            this.updatedialogVisible = false;
+                            this.$message.success("修改成功")
+                        } else {
+                            this.updatedialogVisible = false;
+                            this.$message.err("修改失败")
+
+                        }
+                        this.updatedialogVisible = false;
+                        this.selectall();
+
+                    }
+                )
+            },
+            handledelete(row) {
+                axios.delete("/books/" + row.bookname).then((res) => {
+                        if (res.data.code == 20021) {
+                            this.$message.success("删除成功")
+                        } else if (res.data.code == 20020) {
+                            this.$message.error("删除失败")
+                        } else {
+                            this.$message.error(res.data.message)
+                        }
+                        this.selectall();
+                    }
+                )
+            },
+            handleClose(done) {
+                this.$confirm('确认关闭？')
+                    .then(_ => {
+                        done();
+                    })
+                    .catch(_ => {
+                    });
+            },
+        },
+        data() {
+            return {
+                updatedialogVisible: false,
+                currentPage: 4,
+                form: {
+                    bookname:'',
+                    bookmoney:'',
+                    bookusername:'',
+                },
+                forms: {
+                    bookname:'',
+                    bookmoney:'',
+                    bookusername:'',
+                },
+                dialogVisible: false,
+                books: {
+                    bookname: '',
+                    bookmoney: '',
+                },
+                multipleSelection: [],
+                tableData: [{
+                    bookname: '',
+                    bookmoney: '',
+                    bookusername: '',
+                }, {
+                    bookname: '',
+                    bookmoney: '',
+                    bookusername: '',
+                }, {
+                    bookname: '',
+                    bookmoney: '',
+                    bookusername: '',
+                }, {
+                    bookname: '',
+                    bookmoney: '',
+                    bookusername: '',
+                }]
+            }
+        }
+
+    });
+</script>
+</body>
+</html>
