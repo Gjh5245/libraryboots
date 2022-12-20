@@ -50,4 +50,8 @@ public class BookController {
         String msg = b ? "添加成功" :"添加失败";
         return new result(b ? code.save_ok :code.save_err,b,msg);
     }
+    @GetMapping("/user")
+    public result deleteBy(){
+          return null;
+    }
 }
