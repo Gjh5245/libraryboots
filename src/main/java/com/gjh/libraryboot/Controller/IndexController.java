@@ -19,3 +19,6 @@ public class IndexController {
         return null;
     }
 }
+public String user(){
+    return null;
+}
